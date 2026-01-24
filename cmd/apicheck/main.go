@@ -26,10 +26,15 @@ func main() {
 	case commands.Run:
 		fmt.Println("Command Run")
 	case commands.List:
-		fmt.Println("command List")
+		err := commands.RunList()
+		if err != nil {
+			log.Fatal(err)
+		}
+	case commands.Add:
+		commands.RunAdd()
 	case commands.Remove:
-		fmt.Println("command Remove")
+		commands.RunRemove(args[0:])
 	case commands.Scope:
-		fmt.Println("command Scope")
+		commands.RunScope()
 	}
 }
