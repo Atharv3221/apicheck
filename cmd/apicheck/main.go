@@ -24,7 +24,11 @@ func main() {
 			log.Fatal("Problem while creating local config")
 		}
 	case commands.Run:
-		fmt.Println("Command Run")
+		err := commands.RunRun(args)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	case commands.List:
 		err := commands.RunList()
 		if err != nil {
