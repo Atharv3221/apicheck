@@ -97,7 +97,7 @@ func runRun(current_flag flag, current_output output, arg []string) error {
 
 func runApis(apisToCheck []configparser.ApiConfig, current_output output) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "API NAME\tSTATUS\tCODE\tTIME")
+	fmt.Fprintln(w, "API NAME\tSTATUS\tSTATUS_CODE\tTIME")
 
 	results := make(chan execution.TerminalOutput, len(apisToCheck))
 	var wg sync.WaitGroup
