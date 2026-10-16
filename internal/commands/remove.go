@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Atharv3221/apicheck/internal/configparser"
@@ -13,8 +14,7 @@ func RunRemove(args []string) error {
 	}
 
 	if len(args) < 3 {
-		fmt.Println("Please enter names of api to be removed!")
-		return nil
+		return errors.New("please enter names of api to be removed")
 	}
 
 	toDelete := make([]bool, len(cfg.Apis))
@@ -40,6 +40,5 @@ func RunRemove(args []string) error {
 			updatedApis.Apis = append(updatedApis.Apis, api)
 		}
 	}
-	configparser.Write(updatedApis)
-	return nil
+	return configparser.Write(updatedApis)
 }

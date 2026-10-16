@@ -15,8 +15,7 @@ func runAdd(api configparser.ApiConfig) error {
 		return err
 	}
 	cfg.Apis = append(cfg.Apis, api)
-	configparser.Write(&cfg)
-	return nil
+	return configparser.Write(&cfg)
 }
 
 func RunAdd() error {

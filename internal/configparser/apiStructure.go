@@ -4,8 +4,8 @@ type ApiConfig struct {
 	Name        string            `yaml:"name"`
 	Url         string            `yaml:"url"`
 	Method      string            `yaml:"method"`
-	Header      map[string]string `yaml:"header"`
-	RequestBody string            `yaml:"requestBody"`
+	Header      map[string]string `yaml:"header,omitempty"`
+	RequestBody string            `yaml:"requestBody,omitempty"`
 }
 
 type Config struct {

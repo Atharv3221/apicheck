@@ -20,7 +20,7 @@ func Write(cfg *Config) error {
 	}
 	err = os.WriteFile(configPath, config_data, 0644)
 	if err != nil {
-		return errors.New("Error while adding api")
+		return errors.New("Error while writing config")
 	}
 	return nil
 }
