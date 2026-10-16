@@ -7,5 +7,4 @@ const (
 	POST   Method = "POST"
 	PUT    Method = "PUT"
 	DELETE Method = "DELETE"
-	UPDATE Method = "UPDATE"
 )

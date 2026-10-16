@@ -35,6 +35,6 @@ go.work.sum
 .apicheck.yaml
 
 # Binary
-apicheck
+/apicheck
 # Claude Code
 CLAUDE.md
