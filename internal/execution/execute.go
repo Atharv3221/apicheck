@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,12 +16,24 @@ func Execute(api configparser.ApiConfig, output string) TerminalOutput {
 	terminal_output.ApiName = api.Name
 	api_method := methods.Method(strings.ToUpper(api.Method))
 
-	req, err := http.NewRequest(string(api_method), api.Url, nil)
+	var body io.Reader
+	if api.RequestBody != "" {
+		body = strings.NewReader(api.RequestBody)
+	}
+
+	req, err := http.NewRequest(string(api_method), api.Url, body)
 	if err != nil {
 		terminal_output.Status = FAIL
 		terminal_output.TimeTaken = "0ms"
 		terminal_output.StatusCode = "-"
 		return terminal_output
+	}
+
+	for key, value := range api.Header {
+		req.Header.Set(key, value)
+	}
+	if api.RequestBody != "" && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	client := &http.Client{
