@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -27,44 +28,44 @@ const (
 )
 
 func RunRun(arg []string) error {
-	current_flag := all
-	current_output := terminal
-
-	matched := false
-	var err error
-	if (len(arg)) > 2 {
-		pattern := `^-([an]?t?)$`
-		matched, err = regexp.MatchString(pattern, arg[2])
-		if err != nil {
-			return errors.New("Error while reading flags")
-		}
-	}
-
-	if matched {
-		if strings.Contains(arg[2], "a") {
-			current_flag = all
-		} else if strings.Contains(arg[2], "n") {
-			current_flag = names
-		}
-		if strings.Contains(arg[2], "t") {
-			current_output = terminal
-		}
-
-	} else if len(arg) > 2 {
+	current_flag, current_output, err := parseRunFlags(arg)
+	if err != nil {
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintln(w, "Flag\tDescription")
 		fmt.Fprintln(w, "----\t-----------")
-		fmt.Fprintln(w, "-a\tShow all details")
-		fmt.Fprintln(w, "-n\tShow names only")
+		fmt.Fprintln(w, "-a\tRun all APIs (default)")
+		fmt.Fprintln(w, "-n <name>...\tRun only the named APIs")
 		fmt.Fprintln(w, "-t\tTerminal output format")
 		w.Flush()
-		return fmt.Errorf("unsupported flag used in %s", arg[2])
+		return err
 	}
 
-	return runRun(current_flag, current_output, arg)
+	return runRun(os.Stdout, current_flag, current_output, arg)
 }
 
-func runRun(current_flag flag, current_output output, arg []string) error {
+func parseRunFlags(arg []string) (flag, output, error) {
+	current_flag := all
+	current_output := terminal
+
+	if len(arg) <= 2 {
+		return current_flag, current_output, nil
+	}
+
+	matched, err := regexp.MatchString(`^-([an]?t?)$`, arg[2])
+	if err != nil {
+		return "", "", errors.New("Error while reading flags")
+	}
+	if !matched {
+		return "", "", fmt.Errorf("unsupported flag used in %s", arg[2])
+	}
+
+	if strings.Contains(arg[2], "n") {
+		current_flag = names
+	}
+	return current_flag, current_output, nil
+}
+
+func runRun(w io.Writer, current_flag flag, current_output output, arg []string) error {
 
 	cfg, err := configparser.Load()
 	if err != nil {
@@ -86,17 +87,17 @@ func runRun(current_flag flag, current_output output, arg []string) error {
 				}
 			}
 			if !found {
-				fmt.Println("Didn't found any api named", name)
+				fmt.Fprintln(w, "Didn't found any api named", name)
 			}
 		}
 	}
 
-	return runApis(apisToRun, current_output)
+	return runApis(w, apisToRun, current_output)
 
 }
 
-func runApis(apisToCheck []configparser.ApiConfig, current_output output) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+func runApis(out io.Writer, apisToCheck []configparser.ApiConfig, current_output output) error {
+	w := tabwriter.NewWriter(out, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "API NAME\tSTATUS\tSTATUS_CODE\tTIME")
 
 	results := make(chan execution.TerminalOutput, len(apisToCheck))
@@ -117,8 +118,8 @@ func runApis(apisToCheck []configparser.ApiConfig, current_output output) error 
 	}()
 
 	// Print results as they come in
-	for out := range results {
-		fmt.Fprintf(w, "%s\t%v\t%s\t%s\n", out.ApiName, out.Status, out.StatusCode, out.TimeTaken)
+	for res := range results {
+		fmt.Fprintf(w, "%s\t%v\t%s\t%s\n", res.ApiName, res.Status, res.StatusCode, res.TimeTaken)
 	}
 
 	w.Flush()
